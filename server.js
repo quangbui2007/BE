@@ -30,8 +30,8 @@ app.use(
   cors({
     origin: "*", // or specify the allowed origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    credentials: true, // enable cookies if needed
+    // allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    // credentials: true, // enable cookies if needed
   })
 );
 
