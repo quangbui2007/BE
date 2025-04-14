@@ -28,10 +28,10 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "https://fe-rouge-kappa.vercel.app", // or specify the allowed origins
+    origin: "https://fe-rouge-kappa.vercel.app/", // or specify the allowed origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    // allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    // credentials: true, // enable cookies if needed
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true, // enable cookies if needed
   })
 );
 
