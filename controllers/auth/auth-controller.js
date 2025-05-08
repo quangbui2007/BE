@@ -147,9 +147,9 @@ const refreshTokenHandler = async (req, res) => {
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
   if (!token)
-    return res.status(401).json({
+    return res.status(404).json({
       success: false,
-      message: "Unauthorised user!",
+      message: "token not providerd! Please login first",
     });
 
   try {
