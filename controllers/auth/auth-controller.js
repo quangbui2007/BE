@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/User");
+require('dotenv').config()
 
 //register
 const registerUser = async (req, res) => {
@@ -64,20 +65,29 @@ const loginUser = async (req, res) => {
         email: checkUser.email,
         userName: checkUser.userName,
       },
-      "CLIENT_SECRET_KEY",
+      process.env.ACCESS_SECRET_KEY,
       { expiresIn: "60m" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: false }).json({
-      success: true,
-      message: "Logged in successfully",
-      user: {
-        email: checkUser.email,
-        role: checkUser.role,
-        id: checkUser._id,
-        userName: checkUser.userName,
-      },
-    });
+    const refreshToken = jwt.sign(
+      { id: checkUser._id },
+      process.env.REFRESH_SECRET_KEY,
+      { expiresIn: "7d" }
+    );
+
+    res
+      .cookie("token", token, { httpOnly: true, secure: false })
+      .cookie("refreshToken", refreshToken, { httpOnly: true, secure: false })
+      .json({
+        success: true,
+        message: "Logged in successfully",
+        user: {
+          email: checkUser.email,
+          role: checkUser.role,
+          id: checkUser._id,
+          userName: checkUser.userName,
+        },
+      });
   } catch (e) {
     console.log(e);
     res.status(500).json({
@@ -90,10 +100,47 @@ const loginUser = async (req, res) => {
 //logout
 
 const logoutUser = (req, res) => {
-  res.clearCookie("token").json({
+  res.clearCookie("token").clearCookie("refreshToken").json({
     success: true,
     message: "Logged out successfully!",
   });
+};
+
+const refreshTokenHandler = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken)
+    return res
+      .status(401)
+      .json({ success: false, message: "No refresh token" });
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
+    const checkUser = await User.findOne({ _id: decoded.id });
+    if (!checkUser)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    const newAccessToken = jwt.sign(
+      {
+        id: checkUser._id,
+        role: checkUser.role,
+        email: checkUser.email,
+        userName: checkUser.userName,
+      },
+      process.env.ACCESS_SECRET_KEY,
+      { expiresIn: "60m" }
+    );
+
+    res
+      .cookie("token", newAccessToken, { httpOnly: true, secure: false })
+      .json({
+        success: true,
+        message: "Access token refreshed",
+      });
+  } catch (err) {
+    res.status(403).json({ success: false, message: "Invalid refresh token" });
+  }
 };
 
 //auth middleware
@@ -106,7 +153,7 @@ const authMiddleware = async (req, res, next) => {
     });
 
   try {
-    const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
+    const decoded = jwt.verify(token, process.env.ACCESS_SECRET_KEY);
     req.user = decoded;
     next();
   } catch (error) {
@@ -117,4 +164,23 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, authMiddleware };
+const checkRole = (role) => {
+  return (req, res, next) => {
+    if (!req.user || req.user.role !== role) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Insufficient permissions!",
+      });
+    }
+    next();
+  };
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  authMiddleware,
+  checkRole,
+  refreshTokenHandler,
+};
