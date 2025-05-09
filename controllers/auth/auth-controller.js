@@ -146,11 +146,20 @@ const refreshTokenHandler = async (req, res) => {
 //auth middleware
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
-  if (!token)
-    return res.status(404).json({
+  const refreshtoken = req.cookies.refreshToken;
+  if (!token && !refreshtoken) {
+    return res.status(403).json({
       success: false,
       message: "token not providerd! Please login first",
     });
+  }
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "token not providerd! Please login first",
+    });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET_KEY);
