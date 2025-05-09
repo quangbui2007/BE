@@ -42,4 +42,30 @@ const getFeatureImages = async (req, res) => {
   }
 };
 
-module.exports = { addFeatureImage, getFeatureImages };
+//delete a feature
+const deleteFeatureImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Feature.findByIdAndDelete(id);
+
+    if (!product)
+      return res.status(404).json({
+        success: false,
+        message: "feature not found",
+      });
+
+    res.status(200).json({
+      data: product,
+      success: true,
+      message: "feature delete successfully",
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Error occured",
+    });
+  }
+};
+
+module.exports = { addFeatureImage, getFeatureImages, deleteFeatureImage };
