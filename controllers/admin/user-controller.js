@@ -6,7 +6,7 @@ const getListUsers = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      users,
+      data: users,
     });
   } catch (err) {
     console.error("Error fetching users:", err);
