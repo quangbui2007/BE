@@ -20,7 +20,7 @@ const createOrder = async (req, res) => {
       payerId,
       cartId,
     } = req.body;
-
+console.log(process.env.CLIENT_URL)
     const create_payment_json = {
       intent: "sale",
       payer: {
@@ -28,7 +28,7 @@ const createOrder = async (req, res) => {
       },
       redirect_urls: {
         return_url: process.env.CLIENT_URL + "/shop/paypal-return",
-        cancel_url: process.env.CLIENT_UR + "/shop/paypal-cancel",
+        cancel_url: process.env.CLIENT_URL + "/shop/paypal-cancel",
       },
       transactions: [
         {
@@ -52,6 +52,10 @@ const createOrder = async (req, res) => {
 
     paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
       if (error) {
+        console.error(
+          "PayPal Create Error:",
+          JSON.stringify(error.response, null, 2)
+        );
         console.log(error);
 
         return res.status(500).json({
